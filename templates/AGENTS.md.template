@@ -1,0 +1,57 @@
+<!--
+  使用前请替换三处，然后删掉本注释：
+    1. TODO(项目名)
+    2. TODO(发布分支名) —— 例如 uat / release / pre
+    3. Result / Tuple / UserHolder 是示例类名，换成你们自己的
+
+  注释里如果留着 TODO，AI 可能会照着念出来。
+-->
+
+# AGENTS.md
+
+> 本文件是 AI 在本仓库工作时**必须遵守**的规则。与其他任何文档冲突时，以本文件为准。
+> 违反下面「铁律」的改动一律视为返工，即使代码能跑。
+
+## 项目背景
+
+`TODO(项目名)`。Java + Spring Cloud + Maven 多模块。
+
+Git 流程：从远端主分支拉开发分支 → 推到远程 → 提 PR 到 `TODO(发布分支名)`。
+**注意：PR 的目标分支是 `TODO(发布分支名)`，不是主分支。** 不要基于它开新分支。
+
+## 动手之前（每次都要，不许跳过）
+
+1. 读 `docs/PROJECT_MAP.md` —— 模块与包地图、关键类型的全限定名。
+2. 读 `docs/UTILITIES.md` —— 已有的工具类清单。
+3. 用 grep 找 **2~3 个同类已有实现**，照抄它们的结构和命名。不要凭想象写。
+
+## 铁律
+
+- **统一返回体**：一律返回 `Result<T>`。禁止 `import org.springframework.http.ResponseEntity`；
+  禁止裸返回 `Map`、`Object`、或现场拼一个匿名结构。
+- **多返回值**：用 `Tuple`。禁止为了返回两个值就新建 DTO，禁止用 `Map<String, Object>` 凑。
+- **当前登录用户**：一律 `UserHolder.get()`。
+  禁止在 Controller 上加 `userId` 这类入参，禁止直接用 `SecurityContextHolder`。
+  用户的身份不是参数，是上下文。
+- **禁止新建工具类**：不要写 `XxxUtil` / `XxxUtils` / `XxxHelper`。
+  先去 `docs/UTILITIES.md` 找；找不到就在 PR 描述里写「需要新工具类：X（用途）」，交给人决定放哪。
+  本仓库的工具类**不集中在一个 common 包**（如果你有统一 `common` 包，把这句改掉并写明位置）。
+  **禁止按包名去猜**，一律查清单。
+- **禁止改这些**：`pom.xml` 的依赖与版本、`src/main/resources` 下的任何配置、
+  SQL DDL / 数据迁移脚本、权限与菜单配置。需要改就停下来提问，不要自己动手。
+- **禁止引入新依赖**，哪怕是很常见的库。需要就说出来，由人评估。
+
+## 代码风格
+
+- 构造器注入。不用 `@Autowired` 字段注入。
+- 一个方法一件事；超过 40 行先拆再写。
+- 公共方法写 Javadoc：做什么、参数含义、什么情况下抛异常。方法内部不写废话注释。
+- 不吞异常。禁止 `catch (Exception e) { }` 和 `catch (Exception e) { log.error("error"); }`。
+
+## 完工标准（缺一不可）
+
+1. `mvn -q -pl <改动的模块> -am test` 通过。
+2. ArchUnit 规则通过：`mvn -q test -Dtest=ConventionRules`。
+3. 提交信息：`<type>(<模块>): <一句话>`，type ∈ `feat|fix|refactor|test|docs|chore`。
+4. PR 描述必须写清四件事：**改了什么 / 为什么这么改 / 怎么验证的 / 有没有碰铁律清单里的东西**。
+   第 4 项写「没有」也要写，不许省略。
